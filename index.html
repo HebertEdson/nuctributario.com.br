@@ -973,7 +973,7 @@
   <p class="lead">Anexe as declarações fiscais da sua empresa e nossa equipe retorna em até 48h com o potencial de recuperação.</p>
 
   <div class="upload-card">
-    <form class="upload-form" name="analise-tributaria" method="POST" action="https://formspree.io/f/xdajqrpn" enctype="multipart/form-data">
+    <form class="upload-form" name="analise-tributaria" method="POST" action="https://formspree.io/f/xdajqrpn">
 
       <div class="upload-fields">
         <div class="field-group">
@@ -1009,16 +1009,10 @@
         </div>
       </div>
 
-      <div class="upload-area" id="dropZone">
-        <input type="file" id="fileInput" name="documentos" multiple
-          accept=".pdf,.xml,.txt,.csv,.xls,.xlsx,.zip,.rar"
-          onchange="handleFiles(this.files)" />
-        <div class="upload-icon">📂</div>
-        <p class="upload-main">Informe os arquivos que irá enviar (opcional)</p>
-        <p class="upload-hint">Nossa equipe entrará em contato para orientar o envio dos documentos — SPED, EFD, ECF, NFe, PDF, XLS, ZIP</p>
+      <div style="background: #f0faf4; border: 1.5px solid #68d391; border-radius: 10px; padding: 20px; margin-bottom: 20px; text-align: center;">
+        <p style="color: #22543d; font-weight: 600; margin-bottom: 8px;">✅ Formulário de interesse recebido</p>
+        <p style="color: #2f855a; font-size: 0.9rem;">Após submeter, nossa equipe entrará em contato para orientar o envio dos documentos (SPED, EFD, ECF, NFe, PDF, XLS, ZIP) por email ou WhatsApp.</p>
       </div>
-
-      <div id="fileList" class="file-list"></div>
 
       <div class="upload-footer">
         <p class="upload-privacy">🔒 Seus documentos são transmitidos com criptografia e usados exclusivamente para a análise tributária.</p>
