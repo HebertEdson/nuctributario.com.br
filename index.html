@@ -1034,7 +1034,7 @@
   <div class="section-label" style="color:#7eb3ff">Comece agora — é gratuito</div>
   <h2>Descubra quanto sua empresa<br/>pode recuperar</h2>
   <p class="lead">Análise preliminar gratuita em até 48 horas. Sem compromisso.</p>
-  <form class="cta-form" method="POST" action="https://formsubmit.co/hecnucleotributario@gmail.com">
+  <form class="cta-form" method="POST" action="https://formsubmit.co/hecnucleotributario@gmail.com" onsubmit="handleCTASubmit(event)">
     <input type="email" name="Email" placeholder="Seu melhor e-mail corporativo" required />
     <input type="tel" name="Telefone" placeholder="(11) 99999-9999" required />
     <button type="submit">Quero minha análise →</button>
@@ -1121,6 +1121,43 @@
   function removeFile(i) {
     selectedFiles.splice(i, 1);
     renderFileList();
+  }
+
+  async function handleCTASubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button');
+
+    btn.textContent = 'Enviando…';
+    btn.disabled = true;
+
+    try {
+      const fd = new FormData(form);
+
+      // Envia via fetch para FormSubmit.co
+      await fetch(form.action, {
+        method: 'POST',
+        body: fd
+      });
+
+      // Mostra mensagem de sucesso (sem redirecionar)
+      form.reset();
+
+      const msg = document.createElement('div');
+      msg.style.cssText = 'background: #f0faf4; border: 1.5px solid #68d391; border-radius: 10px; padding: 16px 20px; text-align: center; margin-top: 20px; color: #2f855a; font-weight: 600;';
+      msg.innerHTML = '✅ Pedido enviado com sucesso!';
+      form.parentNode.insertBefore(msg, form.nextSibling);
+
+      setTimeout(() => msg.remove(), 5000);
+      btn.textContent = 'Quero minha análise →';
+      btn.disabled = false;
+
+    } catch (err) {
+      console.error('Erro:', err);
+      btn.textContent = 'Quero minha análise →';
+      btn.disabled = false;
+      alert('Erro ao enviar. Tente novamente.');
+    }
   }
 
   async function handleFormSubmit(e) {
