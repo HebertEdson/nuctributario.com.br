@@ -889,41 +889,7 @@
   <h2>Empresas que <span>recuperaram</span> seus tributos</h2>
   <p class="lead">Mais de 350 empresas já confiaram no Núcleo Tributário.</p>
 
-  <div class="depoimentos-grid">
-    <div class="depoimento">
-      <div class="stars">★★★★★</div>
-      <p>"Recuperamos R$ 380 mil em créditos de PIS/COFINS que nem sabíamos que tínhamos. O processo foi todo feito sem burocracia do nosso lado."</p>
-      <div class="depoimento-author">
-        <div class="avatar">RC</div>
-        <div class="author-info">
-          <strong>Ricardo Campos</strong>
-          <span>CFO — Indústria de Alimentos SP</span>
-        </div>
-      </div>
-    </div>
-    <div class="depoimento">
-      <div class="stars">★★★★★</div>
-      <p>"Achei que era promessa demais, mas em 4 meses recebemos a restituição de ICMS-ST. Voltaríamos a contratar sem pensar duas vezes."</p>
-      <div class="depoimento-author">
-        <div class="avatar">AM</div>
-        <div class="author-info">
-          <strong>Ana Moreira</strong>
-          <span>Sócia — Distribuidora RS</span>
-        </div>
-      </div>
-    </div>
-    <div class="depoimento">
-      <div class="stars">★★★★★</div>
-      <p>"A equipe mapeou erros que nossa contabilidade não havia percebido por anos. Recuperamos mais de R$ 1,2 milhão em contribuições previdenciárias."</p>
-      <div class="depoimento-author">
-        <div class="avatar">FS</div>
-        <div class="author-info">
-          <strong>Fábio Souza</strong>
-          <span>Diretor Financeiro — Construtora RJ</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="depoimentos-grid" id="depoimentos-grid"></div>
 </section>
 
 <!-- FAQ -->
@@ -1257,6 +1223,103 @@
       if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
     });
   });
+
+  // Depoimentos Dinâmicos
+  const depoimentos = [
+    {
+      texto: "Recuperamos R$ 380 mil em créditos de PIS/COFINS que nem sabíamos que tínhamos. O processo foi todo feito sem burocracia do nosso lado.",
+      nome: "Ricardo Campos",
+      cargo: "CFO — Indústria de Alimentos SP",
+      avatar: "RC"
+    },
+    {
+      texto: "Achei que era promessa demais, mas em 4 meses recebemos a restituição de ICMS-ST. Voltaríamos a contratar sem pensar duas vezes.",
+      nome: "Ana Moreira",
+      cargo: "Sócia — Distribuidora RS",
+      avatar: "AM"
+    },
+    {
+      texto: "A equipe mapeou erros que nossa contabilidade não havia percebido por anos. Recuperamos mais de R$ 1,2 milhão em contribuições previdenciárias.",
+      nome: "Fábio Souza",
+      cargo: "Diretor Financeiro — Construtora RJ",
+      avatar: "FS"
+    },
+    {
+      texto: "Nunca imaginei que havia direito a recuperação de ICMS. A empresa nos devolveu mais de R$ 250 mil. Recomendo a todos os empresários que conheço.",
+      nome: "Mariana Silva",
+      cargo: "Proprietária — Comércio Varejista MG",
+      avatar: "MS"
+    },
+    {
+      texto: "A análise que fizeram foi muito completa. Descobrimos erros em impostos federais que nos custaram caro durante anos. Recuperamos R$ 580 mil.",
+      nome: "Carlos Mendes",
+      cargo: "Diretor — Manufatura SP",
+      avatar: "CM"
+    },
+    {
+      texto: "Processo rápido e transparente. Em 3 meses já tínhamos a devolução em conta. Melhor investimento que fizemos para a empresa.",
+      nome: "Juliana Costa",
+      cargo: "Gerente Financeira — Logística RS",
+      avatar: "JC"
+    },
+    {
+      texto: "Achava que tinha passado o prazo para recuperar. Que surpresa saber que ainda tinha direito! Recuperamos R$ 420 mil em PIS.",
+      nome: "Roberto Santos",
+      cargo: "Sócio — Indústria Têxtil BA",
+      avatar: "RS"
+    },
+    {
+      texto: "A equipe é muito atenciosa e profissional. Explicam cada passo do processo. Já recuperamos R$ 950 mil com eles.",
+      nome: "Fernanda Oliveira",
+      cargo: "CFO — Consultoria RJ",
+      avatar: "FO"
+    },
+    {
+      texto: "Contratei por recomendação de um colega. Vale muito a pena. Recuperei mais de R$ 340 mil em COFINS que não estava aproveitando.",
+      nome: "Paulo Ferreira",
+      cargo: "Proprietário — Distribuição ES",
+      avatar: "PF"
+    },
+    {
+      texto: "Não acreditava que era tão simples recuperar esses valores. Em menos de 6 meses o dinheiro chegou na conta da empresa.",
+      nome: "Bianca Martins",
+      cargo: "Diretora — Varejo SP",
+      avatar: "BM"
+    },
+    {
+      texto: "O melhor que fizemos foi contratar vocês. Recuperamos R$ 670 mil em créditos que nossa contabilidade não havia identificado.",
+      nome: "Felipe Rocha",
+      cargo: "Diretor Financeiro — Transportes MG",
+      avatar: "FR"
+    },
+    {
+      texto: "Excelente atendimento e resultado acima das expectativas. Recomendo sem hesitar para outros empresários.",
+      nome: "Adriana Costa",
+      cargo: "Administradora — Prestadora de Serviços GO",
+      avatar: "AC"
+    }
+  ];
+
+  function carregarDepoimentos() {
+    const container = document.getElementById('depoimentos-grid');
+    const shuffled = depoimentos.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+    container.innerHTML = shuffled.map(dep => `
+      <div class="depoimento">
+        <div class="stars">★★★★★</div>
+        <p>"${dep.texto}"</p>
+        <div class="depoimento-author">
+          <div class="avatar">${dep.avatar}</div>
+          <div class="author-info">
+            <strong>${dep.nome}</strong>
+            <span>${dep.cargo}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  carregarDepoimentos();
 </script>
 </body>
 </html>
