@@ -1564,7 +1564,7 @@
   });
 
   // ── COUNTER ANIMATION ──
-  function animateCounter(element, target) {
+  function animateCounter(element, target, suffix = '') {
     const duration = 2000;
     const increment = target / (duration / 16);
     let current = 0;
@@ -1572,10 +1572,10 @@
     const timer = setInterval(() => {
       current += increment;
       if (current >= target) {
-        element.textContent = target.toLocaleString('pt-BR');
+        element.textContent = target.toLocaleString('pt-BR') + suffix;
         clearInterval(timer);
       } else {
-        element.textContent = Math.floor(current).toLocaleString('pt-BR');
+        element.textContent = Math.floor(current).toLocaleString('pt-BR') + suffix;
       }
     }, 16);
   }
@@ -1585,8 +1585,10 @@
     entries.forEach(entry => {
       if (entry.isIntersecting && !entry.target.dataset.animated) {
         entry.target.dataset.animated = 'true';
-        const value = entry.target.textContent.replace(/[^0-9]/g, '');
-        animateCounter(entry.target, parseInt(value));
+        const originalText = entry.target.textContent;
+        const value = originalText.replace(/[^0-9]/g, '');
+        const suffix = originalText.replace(/[0-9]/g, '');
+        animateCounter(entry.target, parseInt(value), suffix);
         counterObserver.unobserve(entry.target);
       }
     });
