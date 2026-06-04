@@ -27,6 +27,107 @@
       line-height: 1.6;
     }
 
+    /* ── ANIMAÇÕES ── */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes glow {
+      0%, 100% {
+        box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      }
+      50% {
+        box-shadow: 0 8px 30px rgba(58,95,160,.4);
+      }
+    }
+
+    @keyframes countUp {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.8s ease-out forwards;
+      opacity: 0;
+    }
+
+    .animate-left {
+      animation: slideInLeft 0.8s ease-out forwards;
+      opacity: 0;
+    }
+
+    .animate-right {
+      animation: slideInRight 0.8s ease-out forwards;
+      opacity: 0;
+    }
+
+    .animate-pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .animate-glow {
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    .animate-count {
+      animation: countUp 0.6s ease-out;
+    }
+
     /* ── NAV ── */
     nav {
       position: sticky;
@@ -727,9 +828,9 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-text">
+  <div class="hero-text animate-left">
     <div class="hero-badge">⚖️ Especialistas em Direito Tributário</div>
-    <h1>Recupere tributos pagos<br/><span>indevidamente</span> nos últimos 5 anos</h1>
+    <h1 class="animate-in">Recupere tributos pagos<br/><span>indevidamente</span> nos últimos 5 anos</h1>
     <p>Analisamos o histórico fiscal da sua empresa e identificamos valores pagos a maior que podem ser recuperados administrativamente ou judicialmente — sem risco, com resultado garantido.</p>
     <div class="hero-actions">
       <a href="#cta" class="btn-primary">Solicitar Análise Gratuita</a>
@@ -737,7 +838,7 @@
     </div>
   </div>
 
-  <div class="hero-card">
+  <div class="hero-card animate-right">
     <h3>📊 Recuperações realizadas</h3>
     <div class="stat-row">
       <div class="stat">
@@ -780,22 +881,22 @@
   <p class="lead">Nosso processo é totalmente transparente. Você acompanha cada etapa sem burocracia.</p>
 
   <div class="steps">
-    <div class="step">
+    <div class="step animate-in">
       <div class="step-number">1</div>
       <h3>Diagnóstico Gratuito</h3>
       <p>Enviamos uma análise preliminar do seu histórico fiscal nos últimos 5 anos para identificar o potencial de recuperação.</p>
     </div>
-    <div class="step">
+    <div class="step animate-in">
       <div class="step-number">2</div>
       <h3>Levantamento Completo</h3>
       <p>Nossa equipe faz o levantamento detalhado de todos os tributos passíveis de recuperação com base nas suas notas e declarações.</p>
     </div>
-    <div class="step">
+    <div class="step animate-in">
       <div class="step-number">3</div>
       <h3>Pedido Administrativo</h3>
       <p>Protocolamos o pedido de restituição ou compensação junto à Receita Federal e/ou Fazenda Estadual sem custo para você.</p>
     </div>
-    <div class="step">
+    <div class="step animate-in">
       <div class="step-number">4</div>
       <h3>Valores Recuperados</h3>
       <p>Os créditos são creditados diretamente na conta da empresa ou compensados com tributos futuros a pagar.</p>
@@ -1305,7 +1406,7 @@
     const shuffled = depoimentos.sort(() => 0.5 - Math.random()).slice(0, 3);
 
     container.innerHTML = shuffled.map(dep => `
-      <div class="depoimento">
+      <div class="depoimento animate-in">
         <div class="stars">★★★★★</div>
         <p>"${dep.texto}"</p>
         <div class="depoimento-author">
@@ -1320,6 +1421,127 @@
   }
 
   carregarDepoimentos();
+
+  // ── ANIMAÇÕES COM INTERSECTION OBSERVER ──
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -100px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animation = 'none';
+        setTimeout(() => {
+          if (entry.target.classList.contains('animate-left')) {
+            entry.target.style.animation = 'slideInLeft 0.8s ease-out forwards';
+          } else if (entry.target.classList.contains('animate-right')) {
+            entry.target.style.animation = 'slideInRight 0.8s ease-out forwards';
+          } else if (entry.target.classList.contains('animate-in')) {
+            entry.target.style.animation = 'fadeInUp 0.8s ease-out forwards';
+          }
+        }, 0);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // Observar elementos com animação
+  document.querySelectorAll('.animate-in, .animate-left, .animate-right').forEach(el => {
+    observer.observe(el);
+  });
+
+  // ── COUNTER ANIMATION ──
+  function animateCounter(element, target) {
+    const duration = 2000;
+    const increment = target / (duration / 16);
+    let current = 0;
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        element.textContent = target.toLocaleString('pt-BR');
+        clearInterval(timer);
+      } else {
+        element.textContent = Math.floor(current).toLocaleString('pt-BR');
+      }
+    }, 16);
+  }
+
+  // Observer para números que contam
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.dataset.animated) {
+        entry.target.dataset.animated = 'true';
+        const value = entry.target.textContent.replace(/[^0-9]/g, '');
+        animateCounter(entry.target, parseInt(value));
+        counterObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.stat-value').forEach(el => {
+    counterObserver.observe(el);
+  });
+
+  // ── PARALLAX EFFECT ──
+  window.addEventListener('scroll', () => {
+    const hero = document.querySelector('.hero::before');
+    const scrollPosition = window.scrollY;
+
+    document.querySelectorAll('[data-parallax]').forEach(el => {
+      const speed = el.getAttribute('data-parallax') || 0.5;
+      el.style.transform = `translateY(${scrollPosition * speed}px)`;
+    });
+  });
+
+  // ── BUTTON HOVER EFFECTS ──
+  document.querySelectorAll('.btn-primary, .btn-secondary, button[class*="btn"]').forEach(btn => {
+    btn.addEventListener('mouseenter', function() {
+      this.style.animation = 'pulse 0.6s ease-out';
+    });
+  });
+
+  // ── CARD HOVER ANIMATIONS ──
+  document.querySelectorAll('.depoimento, .step').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-8px)';
+      this.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)';
+      this.style.transition = 'all 0.3s ease';
+    });
+
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+    });
+  });
+
+  // ── SMOOTH SCROLL ──
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
+
+  // ── FADE IN ELEMENTS ON LOAD ──
+  window.addEventListener('load', () => {
+    document.querySelectorAll('section').forEach((section, index) => {
+      section.style.opacity = '0';
+      section.style.animation = `fadeInUp 0.8s ease-out ${index * 0.1}s forwards`;
+    });
+  });
+
+  // ── BUTTON GLOW ON CTA ──
+  document.querySelectorAll('.btn-primary').forEach(btn => {
+    btn.classList.add('animate-glow');
+  });
 </script>
 </body>
 </html>
