@@ -510,12 +510,49 @@
 
     .faq-list { max-width: 760px; }
 
+    @keyframes expandDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+      }
+    }
+
+    @keyframes collapseUp {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+      }
+    }
+
     .faq-item {
       background: var(--white);
       border: 1px solid #dde3f0;
       border-radius: var(--radius);
       margin-bottom: 12px;
       overflow: hidden;
+      transition: all 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .faq-item:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border-color: var(--blue-accent);
+    }
+
+    .faq-item.open {
+      box-shadow: 0 6px 16px rgba(58,95,160,.12);
+      border-color: var(--blue-accent);
     }
 
     .faq-question {
@@ -532,21 +569,42 @@
       justify-content: space-between;
       align-items: center;
       gap: 16px;
+      transition: color 0.3s ease;
     }
 
-    .faq-question:hover { color: var(--navy); }
-    .faq-arrow { font-size: 1.2rem; color: var(--navy); transition: transform .2s; }
-    .faq-item.open .faq-arrow { transform: rotate(90deg); }
+    .faq-question:hover {
+      color: var(--navy);
+      background: rgba(58,95,160,.02);
+    }
+
+    .faq-arrow {
+      font-size: 1.2rem;
+      color: var(--navy);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: inline-block;
+    }
+
+    .faq-item.open .faq-arrow {
+      transform: rotate(90deg) scale(1.1);
+    }
 
     .faq-answer {
-      display: none;
-      padding: 0 28px 22px;
+      max-height: 0;
+      opacity: 0;
+      padding: 0 28px;
       font-size: 0.88rem;
       color: var(--muted);
       line-height: 1.7;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .faq-item.open .faq-answer { display: block; }
+    .faq-item.open .faq-answer {
+      max-height: 500px;
+      opacity: 1;
+      padding: 0 28px 22px;
+      animation: expandDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
 
     /* ── CTA ── */
     #cta {
