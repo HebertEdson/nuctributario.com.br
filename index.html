@@ -1259,19 +1259,25 @@
 
     try {
       const fd = new FormData(form);
+      const data = Object.fromEntries(fd);
 
-      // Envia via fetch para FormSubmit.co
-      await fetch(form.action, {
+      // Envia via fetch para o servidor backend
+      const response = await fetch('/api/cta', {
         method: 'POST',
-        body: fd
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
       });
+
+      const result = await response.json();
 
       // Mostra mensagem de sucesso (sem redirecionar)
       form.reset();
 
       const msg = document.createElement('div');
       msg.style.cssText = 'background: #f0faf4; border: 1.5px solid #68d391; border-radius: 10px; padding: 16px 20px; text-align: center; margin-top: 20px; color: #2f855a; font-weight: 600;';
-      msg.innerHTML = '✅ Pedido enviado com sucesso!';
+      msg.innerHTML = `✅ ${result.message || 'Pedido enviado com sucesso!'}`;
       form.parentNode.insertBefore(msg, form.nextSibling);
 
       setTimeout(() => msg.remove(), 5000);
@@ -1297,11 +1303,13 @@
     try {
       const fd = new FormData(form);
 
-      // Envia via fetch para FormSubmit.co
-      await fetch(form.action, {
+      // Envia via fetch para o servidor backend
+      const response = await fetch('/api/documentos', {
         method: 'POST',
         body: fd
       });
+
+      const result = await response.json();
 
       // Mostra mensagem de sucesso (sem redirecionar)
       selectedFiles = [];
@@ -1311,7 +1319,7 @@
       const msg = document.createElement('div');
       msg.className = 'upload-success';
       msg.style.display = 'block';
-      msg.innerHTML = '✅ Seus arquivos foram enviados com sucesso!';
+      msg.innerHTML = `✅ ${result.message || 'Seus arquivos foram enviados com sucesso!'}`;
       form.appendChild(msg);
 
       setTimeout(() => msg.remove(), 5000);

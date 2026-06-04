@@ -490,17 +490,23 @@
     e.preventDefault();
 
     const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
 
     try {
-      const response = await fetch('https://formsubmit.co/hecnucleotributario@gmail.com', {
+      const response = await fetch('/api/parcerias', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
       });
 
-      if (response.ok) {
+      const result = await response.json();
+
+      if (result.success) {
         const message = document.createElement('div');
         message.className = 'success-message';
-        message.innerHTML = '<p>✅ Candidatura enviada com sucesso! Entraremos em contato em breve.</p>';
+        message.innerHTML = `<p>✅ ${result.message}</p>`;
         document.body.appendChild(message);
 
         e.target.reset();
@@ -508,6 +514,8 @@
         setTimeout(() => {
           message.remove();
         }, 5000);
+      } else {
+        alert(result.message || 'Erro ao enviar candidatura.');
       }
     } catch (error) {
       console.error('Erro ao enviar:', error);
