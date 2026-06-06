@@ -2155,8 +2155,7 @@
   // ── BOTÃO FLUTUANTE "TOPO" ──
   const scrollTopBtn = document.createElement('button');
   scrollTopBtn.id = 'scroll-top-btn';
-  scrollTopBtn.innerHTML = '↑';
-  scrollTopBtn.setAttribute('title', 'Voltar ao topo');
+  scrollTopBtn.innerHTML = '↑ Topo';
   scrollTopBtn.style.cssText = `
     position: fixed;
     bottom: 20px;
@@ -2164,29 +2163,22 @@
     background: var(--navy);
     color: var(--white);
     border: none;
-    padding: 16px 18px;
-    border-radius: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 700;
-    font-size: 1.4rem;
+    font-weight: 600;
+    font-size: 0.85rem;
     display: none;
     z-index: 999;
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-    box-shadow: 0 8px 24px rgba(29, 52, 97, 0.3), 0 2px 8px rgba(0,0,0,0.15);
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   `;
 
   document.body.appendChild(scrollTopBtn);
 
   window.addEventListener('scroll', () => {
     if (window.scrollY > 300) {
-      scrollTopBtn.style.display = 'flex';
-      scrollTopBtn.style.animation = 'slideUp 0.4s cubic-bezier(0.23, 1, 0.320, 1)';
+      scrollTopBtn.style.display = 'block';
     } else {
       scrollTopBtn.style.display = 'none';
     }
@@ -2201,45 +2193,15 @@
 
   scrollTopBtn.addEventListener('mouseover', () => {
     scrollTopBtn.style.background = 'var(--navy-dark)';
-    scrollTopBtn.style.transform = 'translateY(-8px) scale(1.05)';
-    scrollTopBtn.style.boxShadow = '0 12px 32px rgba(29, 52, 97, 0.4), 0 4px 12px rgba(0,0,0,0.2)';
+    scrollTopBtn.style.transform = 'translateY(-3px)';
+    scrollTopBtn.style.boxShadow = '0 6px 16px rgba(0,0,0,0.3)';
   });
 
   scrollTopBtn.addEventListener('mouseout', () => {
     scrollTopBtn.style.background = 'var(--navy)';
-    scrollTopBtn.style.transform = 'translateY(0) scale(1)';
-    scrollTopBtn.style.boxShadow = '0 8px 24px rgba(29, 52, 97, 0.3), 0 2px 8px rgba(0,0,0,0.15)';
+    scrollTopBtn.style.transform = 'translateY(0)';
+    scrollTopBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
   });
-
-  scrollTopBtn.addEventListener('mousedown', () => {
-    scrollTopBtn.style.transform = 'translateY(-4px) scale(0.98)';
-  });
-
-  scrollTopBtn.addEventListener('mouseup', () => {
-    scrollTopBtn.style.transform = 'translateY(-8px) scale(1.05)';
-  });
-
-  // Responsividade do botão topo
-  function adjustScrollTopBtn() {
-    if (window.innerWidth <= 768) {
-      scrollTopBtn.style.bottom = '80px';
-      scrollTopBtn.style.right = '15px';
-      scrollTopBtn.style.width = '50px';
-      scrollTopBtn.style.height = '50px';
-      scrollTopBtn.style.fontSize = '1.2rem';
-      scrollTopBtn.style.borderRadius = '12px';
-    } else {
-      scrollTopBtn.style.bottom = '20px';
-      scrollTopBtn.style.right = '20px';
-      scrollTopBtn.style.width = '56px';
-      scrollTopBtn.style.height = '56px';
-      scrollTopBtn.style.fontSize = '1.4rem';
-      scrollTopBtn.style.borderRadius = '14px';
-    }
-  }
-
-  window.addEventListener('resize', adjustScrollTopBtn);
-  adjustScrollTopBtn();
 </script>
 
 <!-- MODAL DE PARCERIAS -->
