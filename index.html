@@ -1597,6 +1597,56 @@
 </footer>
 
 <script>
+  // ── FUNÇÕES GLOBAIS DO MODAL (Declaradas no início) ──
+  function openPartnershipModal(e) {
+    if (e) e.preventDefault();
+    const modal = document.getElementById('partnership-modal');
+    if (modal) {
+      modal.classList.add('active');
+      // Forçar display flex via JavaScript
+      modal.style.display = 'flex';
+      modal.style.alignItems = 'flex-start';
+      modal.style.justifyContent = 'center';
+      modal.style.overflowY = 'auto';
+      modal.style.padding = '20px 5%';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closePartnershipModal() {
+    const modal = document.getElementById('partnership-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  }
+
+  function openFormModal(e) {
+    if (e) e.preventDefault();
+    closePartnershipModal();
+    const formModal = document.getElementById('form-modal');
+    if (formModal) {
+      formModal.classList.add('active');
+      // Forçar display flex via JavaScript
+      formModal.style.display = 'flex';
+      formModal.style.alignItems = 'flex-start';
+      formModal.style.justifyContent = 'center';
+      formModal.style.overflowY = 'auto';
+      formModal.style.padding = '20px 5%';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closeFormModal() {
+    const formModal = document.getElementById('form-modal');
+    if (formModal) {
+      formModal.classList.remove('active');
+      formModal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  }
+
   // ── Upload ──
   let selectedFiles = [];
 
@@ -2054,46 +2104,6 @@
     btn.classList.add('animate-glow');
   });
 
-  // ── FUNÇÕES GLOBAIS DO MODAL ──
-  window.openPartnershipModal = function(e) {
-    console.log('openPartnershipModal called');
-    if (e) e.preventDefault();
-    const modal = document.getElementById('partnership-modal');
-    if (modal) {
-      console.log('Modal found, adding active class');
-      modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    } else {
-      console.log('Modal not found');
-    }
-  };
-
-  window.closePartnershipModal = function() {
-    console.log('closePartnershipModal called');
-    const modal = document.getElementById('partnership-modal');
-    if (modal) {
-      modal.classList.remove('active');
-      document.body.style.overflow = 'auto';
-    }
-  };
-
-  window.openFormModal = function(e) {
-    e.preventDefault();
-    window.closePartnershipModal();
-    const formModal = document.getElementById('form-modal');
-    if (formModal) {
-      formModal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-  };
-
-  window.closeFormModal = function() {
-    const formModal = document.getElementById('form-modal');
-    if (formModal) {
-      formModal.classList.remove('active');
-      document.body.style.overflow = 'auto';
-    }
-  };
 
   // ── MENU HAMBURGER ──
   const menuToggle = document.getElementById('menu-toggle');
@@ -2121,13 +2131,13 @@
     const modalOverlay = document.getElementById('partnership-modal');
 
     if (closeBtn) {
-      closeBtn.addEventListener('click', window.closePartnershipModal);
+      closeBtn.addEventListener('click', closePartnershipModal);
     }
 
     if (modalOverlay) {
       modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) {
-          window.closePartnershipModal();
+          closePartnershipModal();
         }
       });
     }
@@ -2137,13 +2147,13 @@
     const formModalOverlay = document.getElementById('form-modal');
 
     if (formCloseBtn) {
-      formCloseBtn.addEventListener('click', window.closeFormModal);
+      formCloseBtn.addEventListener('click', closeFormModal);
     }
 
     if (formModalOverlay) {
       formModalOverlay.addEventListener('click', (e) => {
         if (e.target === formModalOverlay) {
-          window.closeFormModal();
+          closeFormModal();
         }
       });
     }
@@ -2152,7 +2162,7 @@
     const partnershipForm = document.getElementById('partnership-form');
     if (partnershipForm) {
       partnershipForm.addEventListener('submit', () => {
-        setTimeout(window.closeFormModal, 1000);
+        setTimeout(closeFormModal, 1000);
       });
     }
   }, 100);
