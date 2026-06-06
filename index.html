@@ -1599,8 +1599,10 @@
 <script>
   // ── FUNÇÕES GLOBAIS DO MODAL (Declaradas no início) ──
   function openPartnershipModal(e) {
+    console.log('openPartnershipModal called with event:', e);
     if (e) e.preventDefault();
     const modal = document.getElementById('partnership-modal');
+    console.log('Modal found:', !!modal);
     if (modal) {
       modal.classList.add('active');
       // Forçar display flex via JavaScript
