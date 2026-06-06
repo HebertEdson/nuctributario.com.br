@@ -2075,31 +2075,113 @@
   function openPartnershipModal(e) {
     e.preventDefault();
     const modal = document.getElementById('partnership-modal');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    if (modal) {
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
   }
 
   function closePartnershipModal() {
     const modal = document.getElementById('partnership-modal');
-    modal.classList.remove('active');
-    document.body.style.overflow = 'auto';
+    if (modal) {
+      modal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
   }
 
-  const closeBtn = document.getElementById('modal-close-btn');
-  const modalOverlay = document.getElementById('partnership-modal');
+  // Inicializar eventos do modal
+  setTimeout(() => {
+    const closeBtn = document.getElementById('modal-close-btn');
+    const modalOverlay = document.getElementById('partnership-modal');
+    const partnershipForm = document.getElementById('partnership-form');
 
-  closeBtn.addEventListener('click', closePartnershipModal);
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closePartnershipModal);
+    }
 
-  modalOverlay.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) {
-      closePartnershipModal();
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+          closePartnershipModal();
+        }
+      });
+    }
+
+    if (partnershipForm) {
+      partnershipForm.addEventListener('submit', () => {
+        setTimeout(closePartnershipModal, 1000);
+      });
+    }
+  }, 100);
+
+  // ── BOTÃO FLUTUANTE "TOPO" ──
+  const scrollTopBtn = document.createElement('button');
+  scrollTopBtn.id = 'scroll-top-btn';
+  scrollTopBtn.innerHTML = '↑ Topo';
+  scrollTopBtn.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: none;
+    z-index: 999;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  `;
+
+  document.body.appendChild(scrollTopBtn);
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) {
+      scrollTopBtn.style.display = 'block';
+    } else {
+      scrollTopBtn.style.display = 'none';
     }
   });
 
-  // Fechar modal ao enviar formulário
-  document.getElementById('partnership-form').addEventListener('submit', () => {
-    setTimeout(closePartnershipModal, 1000);
+  scrollTopBtn.addEventListener('click', () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   });
+
+  scrollTopBtn.addEventListener('mouseover', () => {
+    scrollTopBtn.style.background = 'var(--navy-dark)';
+    scrollTopBtn.style.transform = 'translateY(-3px)';
+    scrollTopBtn.style.boxShadow = '0 6px 16px rgba(0,0,0,0.3)';
+  });
+
+  scrollTopBtn.addEventListener('mouseout', () => {
+    scrollTopBtn.style.background = 'var(--navy)';
+    scrollTopBtn.style.transform = 'translateY(0)';
+    scrollTopBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+  });
+
+  // Responsividade do botão topo
+  function adjustScrollTopBtn() {
+    if (window.innerWidth <= 768) {
+      scrollTopBtn.style.bottom = '80px';
+      scrollTopBtn.style.right = '10px';
+      scrollTopBtn.style.padding = '10px 14px';
+      scrollTopBtn.style.fontSize = '0.8rem';
+    } else {
+      scrollTopBtn.style.bottom = '20px';
+      scrollTopBtn.style.right = '20px';
+      scrollTopBtn.style.padding = '12px 16px';
+      scrollTopBtn.style.fontSize = '0.85rem';
+    }
+  }
+
+  window.addEventListener('resize', adjustScrollTopBtn);
+  adjustScrollTopBtn();
 </script>
 
 <!-- MODAL DE PARCERIAS -->
