@@ -2054,62 +2054,100 @@
     btn.classList.add('animate-glow');
   });
 
-  // ── MENU HAMBURGER ──
-  const menuToggle = document.getElementById('menu-toggle');
-  const navMenu = document.getElementById('nav-menu');
-
-  menuToggle.addEventListener('click', () => {
-    menuToggle.classList.toggle('active');
-    navMenu.classList.toggle('active');
-  });
-
-  // Fechar menu ao clicar em um link
-  document.querySelectorAll('#nav-menu a').forEach(link => {
-    link.addEventListener('click', () => {
-      menuToggle.classList.remove('active');
-      navMenu.classList.remove('active');
-    });
-  });
-
-  // ── MODAL DE PARCERIAS ──
-  function openPartnershipModal(e) {
+  // ── FUNÇÕES GLOBAIS DO MODAL ──
+  window.openPartnershipModal = function(e) {
     e.preventDefault();
     const modal = document.getElementById('partnership-modal');
     if (modal) {
       modal.classList.add('active');
       document.body.style.overflow = 'hidden';
     }
-  }
+  };
 
-  function closePartnershipModal() {
+  window.closePartnershipModal = function() {
     const modal = document.getElementById('partnership-modal');
     if (modal) {
       modal.classList.remove('active');
       document.body.style.overflow = 'auto';
     }
+  };
+
+  window.openFormModal = function(e) {
+    e.preventDefault();
+    window.closePartnershipModal();
+    const formModal = document.getElementById('form-modal');
+    if (formModal) {
+      formModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  window.closeFormModal = function() {
+    const formModal = document.getElementById('form-modal');
+    if (formModal) {
+      formModal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+  };
+
+  // ── MENU HAMBURGER ──
+  const menuToggle = document.getElementById('menu-toggle');
+  const navMenu = document.getElementById('nav-menu');
+
+  if (menuToggle && navMenu) {
+    menuToggle.addEventListener('click', () => {
+      menuToggle.classList.toggle('active');
+      navMenu.classList.toggle('active');
+    });
+
+    // Fechar menu ao clicar em um link
+    document.querySelectorAll('#nav-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        menuToggle.classList.remove('active');
+        navMenu.classList.remove('active');
+      });
+    });
   }
 
-  // Inicializar eventos do modal
+  // ── INICIALIZAR EVENTOS DO MODAL ──
   setTimeout(() => {
+    // Modal de Parcerias
     const closeBtn = document.getElementById('modal-close-btn');
     const modalOverlay = document.getElementById('partnership-modal');
-    const partnershipForm = document.getElementById('partnership-form');
 
     if (closeBtn) {
-      closeBtn.addEventListener('click', closePartnershipModal);
+      closeBtn.addEventListener('click', window.closePartnershipModal);
     }
 
     if (modalOverlay) {
       modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) {
-          closePartnershipModal();
+          window.closePartnershipModal();
         }
       });
     }
 
+    // Modal do Formulário
+    const formCloseBtn = document.getElementById('form-close-btn');
+    const formModalOverlay = document.getElementById('form-modal');
+
+    if (formCloseBtn) {
+      formCloseBtn.addEventListener('click', window.closeFormModal);
+    }
+
+    if (formModalOverlay) {
+      formModalOverlay.addEventListener('click', (e) => {
+        if (e.target === formModalOverlay) {
+          window.closeFormModal();
+        }
+      });
+    }
+
+    // Formulário de Parcerias
+    const partnershipForm = document.getElementById('partnership-form');
     if (partnershipForm) {
       partnershipForm.addEventListener('submit', () => {
-        setTimeout(closePartnershipModal, 1000);
+        setTimeout(window.closeFormModal, 1000);
       });
     }
   }, 100);
@@ -2257,8 +2295,23 @@
         <p style="margin: 0;"><strong>📢 Dica:</strong> Comece indicando clientes de sua rede de contatos imediata (amigos, clientes anteriores, fornecedores). A boca a boca é o melhor caminho para crescimento e ganho contínuo.</p>
       </div>
 
-      <h2>Formulário de Candidatura</h2>
+      <div style="text-align: center; margin: 48px 0;">
+        <button type="button" class="submit-btn" onclick="openFormModal(event)" style="font-size: 1rem; padding: 14px 32px;">
+          Abrir Formulário de Candidatura
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- MODAL DO FORMULÁRIO DE CANDIDATURA -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1>Formulário de Candidatura</h1>
+      <button type="button" class="modal-close" id="form-close-btn">✕</button>
+    </div>
+    <div class="modal-body">
       <form id="partnership-form">
         <div class="form-grid">
           <div class="form-group">
