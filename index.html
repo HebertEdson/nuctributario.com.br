@@ -1599,10 +1599,8 @@
 <script>
   // ── FUNÇÕES GLOBAIS DO MODAL (Declaradas no início) ──
   function openPartnershipModal(e) {
-    console.log('openPartnershipModal called with event:', e);
     if (e) e.preventDefault();
     const modal = document.getElementById('partnership-modal');
-    console.log('Modal found:', !!modal);
     if (modal) {
       modal.classList.add('active');
       // Forçar display flex via JavaScript
@@ -2133,17 +2131,20 @@
 
     // Fechar menu ao clicar em um link
     document.querySelectorAll('#nav-menu a').forEach(link => {
-      link.addEventListener('click', (e) => {
+      link.addEventListener('click', () => {
         menuToggle.classList.remove('active');
         navMenu.classList.remove('active');
-
-        // Chamar função modal se for o link de Parcerias
-        if (link.getAttribute('onclick') === 'openPartnershipModal(event)') {
-          e.preventDefault();
-          openPartnershipModal(e);
-        }
       });
     });
+
+    // Listener específico para o link de Parcerias
+    const partnershipsLink = document.querySelector('#nav-menu a[href="#"]');
+    if (partnershipsLink) {
+      partnershipsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        openPartnershipModal(e);
+      });
+    }
   }
 
   // ── INICIALIZAR EVENTOS DO MODAL ──
