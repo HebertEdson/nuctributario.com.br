@@ -2133,9 +2133,15 @@
 
     // Fechar menu ao clicar em um link
     document.querySelectorAll('#nav-menu a').forEach(link => {
-      link.addEventListener('click', () => {
+      link.addEventListener('click', (e) => {
         menuToggle.classList.remove('active');
         navMenu.classList.remove('active');
+
+        // Chamar função modal se for o link de Parcerias
+        if (link.getAttribute('onclick') === 'openPartnershipModal(event)') {
+          e.preventDefault();
+          openPartnershipModal(e);
+        }
       });
     });
   }
