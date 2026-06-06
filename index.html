@@ -2056,15 +2056,20 @@
 
   // ── FUNÇÕES GLOBAIS DO MODAL ──
   window.openPartnershipModal = function(e) {
-    e.preventDefault();
+    console.log('openPartnershipModal called');
+    if (e) e.preventDefault();
     const modal = document.getElementById('partnership-modal');
     if (modal) {
+      console.log('Modal found, adding active class');
       modal.classList.add('active');
       document.body.style.overflow = 'hidden';
+    } else {
+      console.log('Modal not found');
     }
   };
 
   window.closePartnershipModal = function() {
+    console.log('closePartnershipModal called');
     const modal = document.getElementById('partnership-modal');
     if (modal) {
       modal.classList.remove('active');
