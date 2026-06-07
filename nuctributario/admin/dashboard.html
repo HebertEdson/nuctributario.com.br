@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard de Métricas | Núcleo Tributário</title>
+  <link rel="stylesheet" href="/admin/css/dashboard.css">
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>📊 MÉTRICAS</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#overview" class="nav-item active" data-tab="overview">📈 Visão Geral</a>
+      <a href="#documents" class="nav-item" data-tab="documents">📄 Documentos</a>
+      <a href="#partners" class="nav-item" data-tab="partners">🤝 Parceiros</a>
+      <a href="#analytics" class="nav-item" data-tab="analytics">📊 Eventos</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- HEADER -->
+    <header class="dashboard-header">
+      <h1>Dashboard de Métricas</h1>
+      <div class="header-actions">
+        <button class="btn-refresh" onclick="loadMetrics()">🔄 Atualizar</button>
+        <span class="last-update">Atualizado: <span id="update-time">agora</span></span>
+      </div>
+    </header>
+
+    <!-- ─── OVERVIEW TAB ─── -->
+    <div id="overview" class="tab-content active">
+      <h2>Visão Geral</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">👥</div>
+          <div class="metric-info">
+            <h3>Visitantes Únicos</h3>
+            <p class="metric-value" id="total-visitors">0</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">👁️</div>
+          <div class="metric-info">
+            <h3>Total de Visitas</h3>
+            <p class="metric-value" id="total-visits">0</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">📄</div>
+          <div class="metric-info">
+            <h3>Documentos Enviados</h3>
+            <p class="metric-value" id="total-documents">0</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">🤝</div>
+          <div class="metric-info">
+            <h3>Parceiros Cadastrados</h3>
+            <p class="metric-value" id="total-partners">0</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">🎯</div>
+          <div class="metric-info">
+            <h3>Solicitações de Análise</h3>
+            <p class="metric-value" id="total-ctas">0</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">💰</div>
+          <div class="metric-info">
+            <h3>Taxa de Conversão</h3>
+            <p class="metric-value" id="conversion-rate">0%</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">⏱️</div>
+          <div class="metric-info">
+            <h3>Permanência Média</h3>
+            <p class="metric-value" id="avg-session">—</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">🖱️</div>
+          <div class="metric-info">
+            <h3>Total de Cliques</h3>
+            <p class="metric-value" id="total-clicks">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="charts-section">
+        <div class="chart-container">
+          <h3>Cliques por Elemento</h3>
+          <div id="clicks-chart" class="chart"></div>
+        </div>
+
+        <div class="chart-container">
+          <h3>Páginas Mais Visitadas</h3>
+          <div id="pages-chart" class="chart"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── DOCUMENTS TAB ─── -->
+    <div id="documents" class="tab-content">
+      <h2>Documentos Enviados</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th>CNPJ</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody id="documents-table">
+            <tr>
+              <td colspan="5" class="empty-state">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── PARTNERS TAB ─── -->
+    <div id="partners" class="tab-content">
+      <h2>Parceiros Cadastrados</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th>Profissão</th>
+              <th>Estado</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody id="partners-table">
+            <tr>
+              <td colspan="6" class="empty-state">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── ANALYTICS TAB ─── -->
+    <div id="analytics" class="tab-content">
+      <h2>Eventos Rastreados</h2>
+
+      <!-- Resumo de sessões -->
+      <div class="metrics-grid" style="margin-bottom:28px;">
+        <div class="metric-card">
+          <div class="metric-icon">⏱️</div>
+          <div class="metric-info">
+            <h3>Permanência Média</h3>
+            <p class="metric-value" id="an-avg-session">—</p>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">📈</div>
+          <div class="metric-info">
+            <h3>Sessões Registradas</h3>
+            <p class="metric-value" id="an-total-sessions">0</p>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">🏆</div>
+          <div class="metric-info">
+            <h3>Maior Permanência</h3>
+            <p class="metric-value" id="an-max-session">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Eventos recentes -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Elemento / Ação</th>
+              <th>Página</th>
+              <th>IP</th>
+              <th>Data / Hora</th>
+            </tr>
+          </thead>
+          <tbody id="events-table">
+            <tr><td colspan="5" class="empty-state">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- SCRIPTS -->
+<script src="/admin/js/dashboard.js"></script>
+
+</body>
+</html>
