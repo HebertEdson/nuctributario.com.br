@@ -12,5 +12,3 @@ services:
         value: production
       - key: FORMSPREE_URL
         value: https://formspree.io/f/mkoagwdj
-      - key: PORT
-        value: 3000
