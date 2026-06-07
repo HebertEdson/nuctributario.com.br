@@ -1,7 +1,8 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'metrics.db');
+// Em produção usa DB_PATH para volume persistente; localmente fica na pasta do projeto
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'metrics.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) console.error('Database connection error:', err);
   else console.log('Conectado ao banco de dados SQLite');
