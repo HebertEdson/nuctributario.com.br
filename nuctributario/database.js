@@ -1,287 +1,157 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+/**
+ * database.js — armazenamento em memória (sem dependências nativas)
+ *
+ * No Render free tier o filesystem é efêmero de qualquer forma.
+ * Formulários críticos já chegam por email via Formspree.
+ * O tracking acumula enquanto o servidor está ativo.
+ */
 
-// Em produção usa DB_PATH para volume persistente; localmente fica na pasta do projeto
-const dbPath = process.env.DB_PATH || path.join(__dirname, 'metrics.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) console.error('Database connection error:', err);
-  else console.log('Conectado ao banco de dados SQLite');
-});
+// ─── Stores em memória ───────────────────────────────────────────────────────
+const store = {
+  events:   [],   // { id, type, page, element, timestamp, ip_address, user_agent }
+  visitors: {},   // ip → { ip_address, first_visit, last_visit, visit_count }
+  documents:[],   // { id, empresa, email, telefone, cnpj, data_envio }
+  partners: [],   // { id, nome, email, ... data_cadastro }
+  ctas:     [],   // { id, email, telefone, data_cta }
+};
+let nextId = { events: 1, documents: 1, partners: 1, ctas: 1 };
 
-// Inicializar tabelas
-db.serialize(() => {
-  // Tabela de eventos (cliques, visualizações)
-  db.run(`
-    CREATE TABLE IF NOT EXISTS events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      type TEXT NOT NULL,
-      page TEXT,
-      element TEXT,
-      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-      ip_address TEXT,
-      user_agent TEXT
-    )
-  `);
+function now() { return new Date().toISOString(); }
 
-  // Tabela de visitantes
-  db.run(`
-    CREATE TABLE IF NOT EXISTS visitors (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      ip_address TEXT UNIQUE,
-      first_visit DATETIME DEFAULT CURRENT_TIMESTAMP,
-      last_visit DATETIME DEFAULT CURRENT_TIMESTAMP,
-      visit_count INTEGER DEFAULT 1
-    )
-  `);
-
-  // Tabela de documentos enviados
-  db.run(`
-    CREATE TABLE IF NOT EXISTS documents (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      empresa TEXT,
-      email TEXT,
-      telefone TEXT,
-      cnpj TEXT,
-      data_envio DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Tabela de parceiros cadastrados
-  db.run(`
-    CREATE TABLE IF NOT EXISTS partners (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT,
-      email TEXT,
-      cpf TEXT,
-      telefone TEXT,
-      profissao TEXT,
-      experiencia TEXT,
-      estado TEXT,
-      cidade TEXT,
-      rede TEXT,
-      motivacao TEXT,
-      disponibilidade TEXT,
-      linkedin TEXT,
-      data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Adicionar colunas extras se o banco já existia sem elas
-  ['rede', 'motivacao', 'disponibilidade', 'linkedin'].forEach(col => {
-    db.run(`ALTER TABLE partners ADD COLUMN ${col} TEXT`, () => {});
-  });
-
-  // Tabela de CTA (Call To Action)
-  db.run(`
-    CREATE TABLE IF NOT EXISTS ctas (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT,
-      telefone TEXT,
-      data_cta DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-});
-
-// Funções para registrar eventos
+// ─── trackEvent ──────────────────────────────────────────────────────────────
 const trackEvent = (type, page, element, ipAddress, userAgent) => {
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO events (type, page, element, ip_address, user_agent)
-       VALUES (?, ?, ?, ?, ?)`,
-      [type, page, element, ipAddress, userAgent],
-      function(err) {
-        if (err) reject(err);
-        else resolve(this.lastID);
-      }
-    );
-  });
+  const row = {
+    id: nextId.events++,
+    type, page, element,
+    timestamp: now(),
+    ip_address: ipAddress,
+    user_agent: userAgent,
+  };
+  store.events.push(row);
+  // Mantém apenas os 5000 eventos mais recentes para não estourar memória
+  if (store.events.length > 5000) store.events.shift();
+  return Promise.resolve(row.id);
 };
 
+// ─── trackVisitor ────────────────────────────────────────────────────────────
 const trackVisitor = (ipAddress) => {
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT OR IGNORE INTO visitors (ip_address) VALUES (?)`,
-      [ipAddress],
-      (err) => {
-        if (err) reject(err);
-        else {
-          // Atualizar última visita
-          db.run(
-            `UPDATE visitors SET last_visit = CURRENT_TIMESTAMP, visit_count = visit_count + 1
-             WHERE ip_address = ?`,
-            [ipAddress],
-            (err) => {
-              if (err) reject(err);
-              else resolve();
-            }
-          );
-        }
-      }
-    );
-  });
+  if (store.visitors[ipAddress]) {
+    store.visitors[ipAddress].last_visit = now();
+    store.visitors[ipAddress].visit_count += 1;
+  } else {
+    store.visitors[ipAddress] = {
+      ip_address: ipAddress,
+      first_visit: now(),
+      last_visit: now(),
+      visit_count: 1,
+    };
+  }
+  return Promise.resolve();
 };
 
+// ─── addDocument ─────────────────────────────────────────────────────────────
 const addDocument = (empresa, email, telefone, cnpj) => {
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO documents (empresa, email, telefone, cnpj) VALUES (?, ?, ?, ?)`,
-      [empresa, email, telefone, cnpj],
-      function(err) {
-        if (err) reject(err);
-        else resolve(this.lastID);
-      }
-    );
-  });
+  const row = { id: nextId.documents++, empresa, email, telefone, cnpj, data_envio: now() };
+  store.documents.push(row);
+  return Promise.resolve(row.id);
 };
 
+// ─── addPartner ──────────────────────────────────────────────────────────────
 const addPartner = (nome, email, cpf, telefone, profissao, experiencia, estado, cidade,
                     rede, motivacao, disponibilidade, linkedin) => {
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO partners (nome, email, cpf, telefone, profissao, experiencia, estado, cidade,
-                             rede, motivacao, disponibilidade, linkedin)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [nome, email, cpf, telefone, profissao, experiencia, estado, cidade,
-       rede || null, motivacao || null, disponibilidade || null, linkedin || null],
-      function(err) {
-        if (err) reject(err);
-        else resolve(this.lastID);
-      }
-    );
-  });
+  const row = {
+    id: nextId.partners++,
+    nome, email, cpf, telefone, profissao, experiencia, estado, cidade,
+    rede: rede || null, motivacao: motivacao || null,
+    disponibilidade: disponibilidade || null, linkedin: linkedin || null,
+    data_cadastro: now(),
+  };
+  store.partners.push(row);
+  return Promise.resolve(row.id);
 };
 
+// ─── addCTA ──────────────────────────────────────────────────────────────────
 const addCTA = (email, telefone) => {
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO ctas (email, telefone) VALUES (?, ?)`,
-      [email, telefone],
-      function(err) {
-        if (err) reject(err);
-        else resolve(this.lastID);
-      }
-    );
-  });
+  const row = { id: nextId.ctas++, email, telefone, data_cta: now() };
+  store.ctas.push(row);
+  return Promise.resolve(row.id);
 };
 
-// Funções para obter métricas
+// ─── getMetrics ──────────────────────────────────────────────────────────────
 const getMetrics = () => {
-  return new Promise((resolve, reject) => {
-    const metrics = {};
+  const visitors = Object.values(store.visitors);
+  const totalVisits = visitors.reduce((s, v) => s + v.visit_count, 0);
 
-    // Total de visitantes únicos
-    db.get(`SELECT COUNT(*) as count FROM visitors`, (err, row) => {
-      if (err) return reject(err);
-      metrics.totalVisitors = row.count || 0;
+  // Cliques por elemento
+  const clickMap = {};
+  store.events.filter(e => e.type === 'click').forEach(e => {
+    clickMap[e.element] = (clickMap[e.element] || 0) + 1;
+  });
+  const clicksByElement = Object.entries(clickMap)
+    .map(([element, count]) => ({ element, count }))
+    .sort((a, b) => b.count - a.count);
 
-      // Total de visitas
-      db.get(`SELECT SUM(visit_count) as total FROM visitors`, (err, row) => {
-        if (err) return reject(err);
-        metrics.totalVisits = row.total || 0;
+  // Page views por página
+  const pvMap = {};
+  store.events.filter(e => e.type === 'pageview').forEach(e => {
+    pvMap[e.page] = (pvMap[e.page] || 0) + 1;
+  });
+  const pageViews = Object.entries(pvMap)
+    .map(([page, count]) => ({ page, count }))
+    .sort((a, b) => b.count - a.count);
 
-        // Total de documentos
-        db.get(`SELECT COUNT(*) as count FROM documents`, (err, row) => {
-          if (err) return reject(err);
-          metrics.totalDocuments = row.count || 0;
-
-          // Total de parceiros
-          db.get(`SELECT COUNT(*) as count FROM partners`, (err, row) => {
-            if (err) return reject(err);
-            metrics.totalPartners = row.count || 0;
-
-            // Total de CTAs
-            db.get(`SELECT COUNT(*) as count FROM ctas`, (err, row) => {
-              if (err) return reject(err);
-              metrics.totalCTAs = row.count || 0;
-
-              // Cliques por elemento
-              db.all(
-                `SELECT element, COUNT(*) as count FROM events WHERE type = 'click'
-                 GROUP BY element ORDER BY count DESC`,
-                (err, rows) => {
-                  if (err) return reject(err);
-                  metrics.clicksByElement = rows || [];
-
-                  // Páginas mais visitadas
-                  db.all(
-                    `SELECT page, COUNT(*) as count FROM events WHERE type = 'pageview'
-                     GROUP BY page ORDER BY count DESC`,
-                    (err, rows) => {
-                      if (err) return reject(err);
-                      metrics.pageViews = rows || [];
-
-                      resolve(metrics);
-                    }
-                  );
-                }
-              );
-            });
-          });
-        });
-      });
-    });
+  return Promise.resolve({
+    totalVisitors:  visitors.length,
+    totalVisits,
+    totalDocuments: store.documents.length,
+    totalPartners:  store.partners.length,
+    totalCTAs:      store.ctas.length,
+    clicksByElement,
+    pageViews,
   });
 };
 
+// ─── getRecentEvents ─────────────────────────────────────────────────────────
 const getRecentEvents = (limit = 50) => {
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT type, page, element, timestamp, ip_address FROM events ORDER BY timestamp DESC LIMIT ?`,
-      [limit],
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      }
-    );
-  });
+  const rows = [...store.events]
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, limit);
+  return Promise.resolve(rows);
 };
 
+// ─── getSessionStats ─────────────────────────────────────────────────────────
 const getSessionStats = () => {
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT element FROM events WHERE type = 'session' AND element LIKE '%s'`,
-      [],
-      (err, rows) => {
-        if (err) return reject(err);
-        const durations = (rows || [])
-          .map(r => parseInt(r.element))
-          .filter(n => !isNaN(n) && n > 0 && n < 7200);
-        const avg = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
-        const max = durations.length ? Math.max(...durations) : 0;
-        resolve({ avg, max, total: durations.length });
-      }
-    );
-  });
+  const durations = store.events
+    .filter(e => e.type === 'session' && /^\d+s$/.test(e.element || ''))
+    .map(e => parseInt(e.element))
+    .filter(n => n > 0 && n < 7200);
+
+  const avg = durations.length
+    ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+    : 0;
+  const max = durations.length ? Math.max(...durations) : 0;
+  return Promise.resolve({ avg, max, total: durations.length });
 };
 
+// ─── getRecentDocuments ──────────────────────────────────────────────────────
 const getRecentDocuments = (limit = 10) => {
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT * FROM documents ORDER BY data_envio DESC LIMIT ?`,
-      [limit],
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      }
-    );
-  });
+  const rows = [...store.documents]
+    .sort((a, b) => new Date(b.data_envio) - new Date(a.data_envio))
+    .slice(0, limit);
+  return Promise.resolve(rows);
 };
 
+// ─── getRecentPartners ───────────────────────────────────────────────────────
 const getRecentPartners = (limit = 10) => {
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT * FROM partners ORDER BY data_cadastro DESC LIMIT ?`,
-      [limit],
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      }
-    );
-  });
+  const rows = [...store.partners]
+    .sort((a, b) => new Date(b.data_cadastro) - new Date(a.data_cadastro))
+    .slice(0, limit);
+  return Promise.resolve(rows);
 };
 
+// ─── Exportações compatíveis com a interface anterior ────────────────────────
 module.exports = {
-  db,
+  db: null, // mantido para compatibilidade (não usado)
   trackEvent,
   trackVisitor,
   addDocument,
@@ -291,5 +161,5 @@ module.exports = {
   getRecentDocuments,
   getRecentPartners,
   getRecentEvents,
-  getSessionStats
+  getSessionStats,
 };
