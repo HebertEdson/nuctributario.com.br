@@ -12,11 +12,5 @@ services:
         value: production
       - key: FORMSPREE_URL
         value: https://formspree.io/f/mkoagwdj
-      - key: DB_PATH
-        value: /var/data/metrics.db
       - key: PORT
         value: 3000
-    disk:
-      name: sqlite-data
-      mountPath: /var/data
-      sizeGB: 1
