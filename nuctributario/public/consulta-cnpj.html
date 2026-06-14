@@ -409,6 +409,26 @@
     }
     console.log('CNPJ válido:', raw);
   }
+
+  // ── UI HELPERS ────────────────────────────────────────────
+
+  const spinner = document.getElementById('spinner');
+  const resultCard = document.getElementById('resultCard');
+  const toast = document.getElementById('toast');
+  let toastTimer = null;
+
+  function showToast(msg, isError = false) {
+    clearTimeout(toastTimer);
+    toast.textContent = msg;
+    toast.className = 'toast show' + (isError ? ' error' : '');
+    toastTimer = setTimeout(() => { toast.className = 'toast'; }, 3500);
+  }
+
+  function setLoading(on) {
+    searchBtn.disabled = on;
+    spinner.classList.toggle('visible', on);
+    if (on) resultCard.classList.remove('visible');
+  }
 </script>
 
 </body>
