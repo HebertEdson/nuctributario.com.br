@@ -622,26 +622,18 @@
   async function fetchProcessos(cnpj, uf) {
     try {
       const res = await fetch(`/api/processos/${cnpj}?uf=${encodeURIComponent(uf)}`);
-      if (!res.ok) return null;
+      if (!res.ok) return [];
       const json = await res.json();
-      if (json.status === 'no_key') return null;
-      if (json.status === 'uf_unknown') return 'uf_unknown';
+      if (json.status === 'no_key' || json.status === 'uf_unknown') return [];
       return json.processos || [];
     } catch {
-      // file:// ou servidor indisponível
-      return null;
+      return [];
     }
   }
 
   function renderProcessos(processos) {
-    if (processos === 'uf_unknown') {
-      return '<div class="empty-state">Localização não identificada — consulta de processos indisponível.</div>';
-    }
-    if (processos === null) {
-      return '<div class="empty-state">Consulta de processos temporariamente indisponível.</div>';
-    }
-    if (!processos.length) {
-      return '<div class="empty-state">Nenhum processo ativo encontrado nos tribunais consultados.</div>';
+    if (!processos || !processos.length) {
+      return '<div class="empty-state">Nenhum processo encontrado nos tribunais consultados.</div>';
     }
     return processos.map(p => {
       const num = escapeHTML(p.numeroProcesso || '—');
