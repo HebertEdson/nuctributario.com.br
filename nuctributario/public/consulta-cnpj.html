@@ -23,6 +23,11 @@
     --amber: #f59e0b;
     --blue-badge-bg: #dbeafe;
     --blue-badge-fg: #1e40af;
+    --amber-bg: #fef9ec;
+    --sky-50: #f0f9ff;
+    --sky-200: #bae6fd;
+    --sky-700: #0369a1;
+    --white-60: rgba(255,255,255,0.6);
   }
 
   body {
@@ -45,7 +50,7 @@
     letter-spacing: -0.3px;
   }
   .page-header p {
-    color: rgba(255,255,255,0.6);
+    color: var(--white-60);
     font-size: 13px;
     margin-top: 4px;
   }
@@ -137,7 +142,7 @@
   .badge-ativa { background: var(--green); color: var(--white); }
   .badge-baixada { background: var(--red); color: var(--white); }
   .badge-inapta { background: var(--amber); color: var(--white); }
-  .card-since { color: rgba(255,255,255,0.6); font-size: 12px; }
+  .card-since { color: var(--white-60); font-size: 12px; }
 
   .card-empresa {
     padding: 20px 24px 16px;
@@ -233,7 +238,7 @@
   .socio-qual { font-size: 11px; color: var(--gray-600); margin-top: 2px; }
 
   .processo-row {
-    background: #fef9ec;
+    background: var(--amber-bg);
     border-left: 3px solid var(--amber);
     border-radius: 0 8px 8px 0;
     padding: 10px 14px;
@@ -251,15 +256,15 @@
   }
 
   .datajud-notice {
-    background: #f0f9ff;
-    border: 1px solid #bae6fd;
+    background: var(--sky-50);
+    border: 1px solid var(--sky-200);
     border-radius: 8px;
     padding: 12px 14px;
     font-size: 12px;
-    color: #0369a1;
+    color: var(--sky-700);
     line-height: 1.5;
   }
-  .datajud-notice a { color: #0369a1; font-weight: 600; }
+  .datajud-notice a { color: var(--sky-700); font-weight: 600; }
 
   /* ── SPINNER ── */
   .spinner-wrap {
@@ -281,6 +286,9 @@
     animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation: none; border-top-color: var(--nt-blue); }
+  }
 
   /* ── TOAST ── */
   .toast {
@@ -305,10 +313,10 @@
 </head>
 <body>
 
-<div class="page-header">
+<header class="page-header">
   <h1>Consulta de CNPJ</h1>
   <p>Regime tributário, sócios e processos judiciais</p>
-</div>
+</header>
 
 <div class="search-wrap">
   <div class="search-box">
@@ -318,6 +326,7 @@
       placeholder="00.000.000/0000-00"
       maxlength="18"
       inputmode="numeric"
+      aria-label="CNPJ da empresa"
     >
     <button id="searchBtn" onclick="handleSearch()">
       🔍 Buscar
@@ -325,7 +334,7 @@
   </div>
 </div>
 
-<div class="container">
+<main class="container">
   <div class="spinner-wrap" id="spinner">
     <div class="spinner"></div>
     Consultando...
@@ -334,9 +343,9 @@
   <div class="card" id="resultCard">
     <!-- preenchido por renderCard() -->
   </div>
-</div>
+</main>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
   // ── CONFIGURAÇÃO ──────────────────────────────────────────
