@@ -180,6 +180,67 @@ app.get('/api/noticias', async (req, res) => {
   }
 });
 
+// ─── PROCESSOS JUDICIAIS (DataJud CNJ proxy) ───
+const DJ_KEY = process.env.DATAJUD_API_KEY || '';
+
+const UF_TO_TRIBUNAL = {
+  AC:'tjac', AL:'tjal', AM:'tjam', AP:'tjap', BA:'tjba', CE:'tjce',
+  DF:'tjdft', ES:'tjes', GO:'tjgo', MA:'tjma', MG:'tjmg', MS:'tjms',
+  MT:'tjmt', PA:'tjpa', PB:'tjpb', PE:'tjpe', PI:'tjpi', PR:'tjpr',
+  RJ:'tjrj', RN:'tjrn', RO:'tjro', RR:'tjrr', RS:'tjrs', SC:'tjsc',
+  SE:'tjse', SP:'tjsp', TO:'tjto'
+};
+const UF_TO_TRF = {
+  AC:'trf1', AM:'trf1', AP:'trf1', BA:'trf1', GO:'trf1', MA:'trf1',
+  MG:'trf6', MT:'trf1', PA:'trf1', PI:'trf1', RO:'trf1', RR:'trf1',
+  DF:'trf1', TO:'trf1', ES:'trf2', RJ:'trf2', MS:'trf3', SP:'trf3',
+  PR:'trf4', RS:'trf4', SC:'trf4', AL:'trf5', CE:'trf5', PB:'trf5',
+  PE:'trf5', RN:'trf5', SE:'trf5'
+};
+
+async function queryDataJud(tribunal, cnpj) {
+  const formatted = cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  const body = {
+    size: 10,
+    query: {
+      bool: {
+        should: [
+          { nested: { path: 'partes', query: { term: { 'partes.cpfCnpj': cnpj } } } },
+          { nested: { path: 'partes', query: { term: { 'partes.cpfCnpj': formatted } } } }
+        ],
+        minimum_should_match: 1
+      }
+    },
+    _source: ['numeroProcesso', 'tribunal', 'orgaoJulgador', 'dataHoraUltimaAtualizacao']
+  };
+  const res = await axios.post(
+    `https://api-publica.datajud.cnj.jus.br/api_publica_${tribunal}/_search`,
+    body,
+    { headers: { Authorization: `APIKey ${DJ_KEY}`, 'Content-Type': 'application/json' }, timeout: 8000 }
+  );
+  return res.data?.hits?.hits?.map(h => h._source) || [];
+}
+
+app.get('/api/processos/:cnpj', async (req, res) => {
+  if (!DJ_KEY) return res.json({ status: 'no_key' });
+
+  const cnpj = req.params.cnpj.replace(/\D/g, '');
+  if (cnpj.length !== 14) return res.status(400).json({ error: 'CNPJ inválido' });
+
+  const uf = (req.query.uf || '').toUpperCase();
+  if (!UF_TO_TRIBUNAL[uf] && !UF_TO_TRF[uf]) return res.json({ status: 'uf_unknown' });
+
+  const tribunals = [UF_TO_TRIBUNAL[uf], UF_TO_TRF[uf]].filter(Boolean);
+  try {
+    const results = await Promise.allSettled(tribunals.map(t => queryDataJud(t, cnpj)));
+    const processos = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
+    res.json({ status: 'ok', processos });
+  } catch (err) {
+    console.error('Erro DataJud:', err.message);
+    res.status(500).json({ error: 'Erro ao consultar DataJud' });
+  }
+});
+
 // ─── MÉTRICAS (admin) ───
 app.get('/api/metrics', async (req, res) => {
   try {

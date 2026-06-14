@@ -355,7 +355,8 @@
 
 <script>
   // ── CONFIGURAÇÃO ──────────────────────────────────────────
-  const DATAJUD_API_KEY = ''; // coloque sua chave aqui: datajud.cnj.jus.br
+  // A chave DataJud fica no servidor (.env → DATAJUD_API_KEY).
+  // Os processos são buscados via /api/processos/:cnpj?uf=XX
   // ─────────────────────────────────────────────────────────
 
   const input = document.getElementById('cnpjInput');
@@ -616,82 +617,20 @@
     resultCard.classList.add('visible');
   }
 
-  // ── DataJud CNJ ───────────────────────────────────────────
-
-  const UF_TO_TRIBUNAL = {
-    AC:'tjac', AL:'tjal', AM:'tjam', AP:'tjap', BA:'tjba', CE:'tjce',
-    DF:'tjdft', ES:'tjes', GO:'tjgo', MA:'tjma', MG:'tjmg', MS:'tjms',
-    MT:'tjmt', PA:'tjpa', PB:'tjpb', PE:'tjpe', PI:'tjpi', PR:'tjpr',
-    RJ:'tjrj', RN:'tjrn', RO:'tjro', RR:'tjrr', RS:'tjrs', SC:'tjsc',
-    SE:'tjse', SP:'tjsp', TO:'tjto'
-  };
-
-  const UF_TO_TRF = {
-    AC:'trf1', AM:'trf1', AP:'trf1', BA:'trf1', GO:'trf1', MA:'trf1',
-    MG:'trf6', MT:'trf1', PA:'trf1', PI:'trf1', RO:'trf1', RR:'trf1',
-    DF:'trf1', TO:'trf1',
-    ES:'trf2', RJ:'trf2',
-    MS:'trf3', SP:'trf3',
-    PR:'trf4', RS:'trf4', SC:'trf4',
-    AL:'trf5', CE:'trf5', PB:'trf5', PE:'trf5', RN:'trf5', SE:'trf5'
-  };
-
-  async function queryDataJud(tribunal, cnpj) {
-    const url = `https://api-publica.datajud.cnj.jus.br/api_publica_${tribunal}/_search`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `APIKey ${DATAJUD_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        size: 10,
-        query: {
-          bool: {
-            should: [
-              {
-                nested: {
-                  path: 'partes',
-                  query: { term: { 'partes.cpfCnpj': cnpj } }
-                }
-              },
-              {
-                nested: {
-                  path: 'partes',
-                  query: {
-                    term: {
-                      'partes.cpfCnpj': cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')
-                    }
-                  }
-                }
-              }
-            ],
-            minimum_should_match: 1
-          }
-        },
-        _source: ['numeroProcesso', 'tribunal', 'orgaoJulgador', 'classe', 'dataHoraUltimaAtualizacao']
-      })
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.hits?.hits?.map(h => h._source) || [];
-  }
+  // ── DataJud CNJ (via backend — chave protegida no servidor) ─
 
   async function fetchProcessos(cnpj, uf) {
-    if (!DATAJUD_API_KEY) return null;
-    if (!UF_TO_TRIBUNAL[uf] && !UF_TO_TRF[uf]) return 'uf_unknown';
-
-    const tribunals = [];
-    if (UF_TO_TRIBUNAL[uf]) tribunals.push(UF_TO_TRIBUNAL[uf]);
-    if (UF_TO_TRF[uf]) tribunals.push(UF_TO_TRF[uf]);
-
-    const results = await Promise.allSettled(
-      tribunals.map(t => queryDataJud(t, cnpj))
-    );
-
-    return results
-      .filter(r => r.status === 'fulfilled')
-      .flatMap(r => r.value);
+    try {
+      const res = await fetch(`/api/processos/${cnpj}?uf=${encodeURIComponent(uf)}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (json.status === 'no_key') return null;
+      if (json.status === 'uf_unknown') return 'uf_unknown';
+      return json.processos || [];
+    } catch {
+      // file:// ou servidor indisponível
+      return null;
+    }
   }
 
   function renderProcessos(processos) {
@@ -701,9 +640,9 @@
     if (processos === null) {
       return `
         <div class="datajud-notice">
-          🔑 Para consultar processos judiciais, adicione sua chave gratuita do DataJud
-          no início do arquivo (<code>DATAJUD_API_KEY</code>).<br>
-          Cadastre em <a href="https://datajud-wiki.cnj.jus.br/api-publica/acesso" target="_blank" rel="noopener">datajud.cnj.jus.br</a>.
+          🔑 Consulta de processos não configurada. Para ativar, adicione a chave gratuita do DataJud
+          na variável <code>DATAJUD_API_KEY</code> no arquivo <code>.env</code> do servidor.<br>
+          Obtenha sua chave em <a href="https://datajud-wiki.cnj.jus.br/api-publica/acesso" target="_blank" rel="noopener">datajud.cnj.jus.br</a>.
         </div>`;
     }
     if (!processos.length) {
