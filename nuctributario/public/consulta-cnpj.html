@@ -373,7 +373,7 @@
 
   // Enter aciona busca
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleSearch();
+    if (e.key === 'Enter' && !searchBtn.disabled) handleSearch();
   });
 
   // Escapa strings da API antes de injetar em innerHTML — previne XSS
@@ -445,6 +445,7 @@
         cnae_fiscal_descricao: est.atividade_principal?.descricao || '',
         // inscrições
         inscricoes_estaduais: est.inscricoes_estaduais || [],
+        regime_tributario: data.regime_tributario,
       };
       const uf = empresa.uf || '';
       const processosReais = await fetchProcessos(raw, uf);
@@ -495,7 +496,8 @@
     const rt = data.regime_tributario;
     if (rt === '5' || rt === 5) return { label: 'Lucro Real', icon: '🟧' };
     if (rt === '3' || rt === 3) return { label: 'Lucro Presumido', icon: '🟨' };
-    return { label: 'Lucro Presumido', icon: '🟨' };
+    // Sem informação de regime: presume Lucro Presumido (padrão para empresas sem opção declarada na RF)
+    return { label: 'Lucro Presumido*', icon: '🟨' };
   }
 
   function formatDate(iso) {
@@ -546,6 +548,7 @@
 
     const processosHTML = renderProcessos(processos);
 
+    // IE is escaped per-item before join — safe to insert raw into innerHTML
     const ie = (empresa.inscricoes_estaduais || [])
       .map(i => escapeHTML(i.inscricao_estadual || i.numero || ''))
       .filter(Boolean)
@@ -644,11 +647,26 @@
       body: JSON.stringify({
         size: 10,
         query: {
-          nested: {
-            path: 'partes',
-            query: {
-              term: { 'partes.cpfCnpj': cnpj }
-            }
+          bool: {
+            should: [
+              {
+                nested: {
+                  path: 'partes',
+                  query: { term: { 'partes.cpfCnpj': cnpj } }
+                }
+              },
+              {
+                nested: {
+                  path: 'partes',
+                  query: {
+                    term: {
+                      'partes.cpfCnpj': cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')
+                    }
+                  }
+                }
+              }
+            ],
+            minimum_should_match: 1
           }
         },
         _source: ['numeroProcesso', 'tribunal', 'orgaoJulgador', 'classe', 'dataHoraUltimaAtualizacao']
@@ -661,6 +679,7 @@
 
   async function fetchProcessos(cnpj, uf) {
     if (!DATAJUD_API_KEY) return null;
+    if (!UF_TO_TRIBUNAL[uf] && !UF_TO_TRF[uf]) return 'uf_unknown';
 
     const tribunals = [];
     if (UF_TO_TRIBUNAL[uf]) tribunals.push(UF_TO_TRIBUNAL[uf]);
@@ -676,6 +695,9 @@
   }
 
   function renderProcessos(processos) {
+    if (processos === 'uf_unknown') {
+      return '<div class="empty-state">Localização não identificada — consulta de processos indisponível.</div>';
+    }
     if (processos === null) {
       return `
         <div class="datajud-notice">
