@@ -401,13 +401,24 @@
     return calc(12) === parseInt(cnpj[12]) && calc(13) === parseInt(cnpj[13]);
   }
 
-  function handleSearch() {
+  async function handleSearch() {
     const raw = getRawCNPJ();
     if (!validateCNPJ(raw)) {
       showToast('CNPJ inválido — verifique os dígitos', true);
       return;
     }
-    console.log('CNPJ válido:', raw);
+
+    setLoading(true);
+    try {
+      const empresa = await fetchEmpresa(raw);
+      const uf = empresa.uf || '';
+      const processosReais = await fetchProcessos(raw, uf);
+      renderCard(empresa, processosReais);
+    } catch (err) {
+      showToast(err.message || 'Erro ao consultar. Verifique sua conexão.', true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   // ── UI HELPERS ────────────────────────────────────────────
