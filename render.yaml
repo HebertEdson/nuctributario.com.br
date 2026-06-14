@@ -14,3 +14,5 @@ services:
         value: https://formspree.io/f/mkoagwdj
       - key: NODE_VERSION
         value: 20.18.0
+      - key: DATAJUD_API_KEY
+        value: cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==
