@@ -561,6 +561,95 @@
 
     resultCard.classList.add('visible');
   }
+
+  // ── DataJud CNJ ───────────────────────────────────────────
+
+  const UF_TO_TRIBUNAL = {
+    AC:'tjac', AL:'tjal', AM:'tjam', AP:'tjap', BA:'tjba', CE:'tjce',
+    DF:'tjdft', ES:'tjes', GO:'tjgo', MA:'tjma', MG:'tjmg', MS:'tjms',
+    MT:'tjmt', PA:'tjpa', PB:'tjpb', PE:'tjpe', PI:'tjpi', PR:'tjpr',
+    RJ:'tjrj', RN:'tjrn', RO:'tjro', RR:'tjrr', RS:'tjrs', SC:'tjsc',
+    SE:'tjse', SP:'tjsp', TO:'tjto'
+  };
+
+  const UF_TO_TRF = {
+    AC:'trf1', AM:'trf1', AP:'trf1', BA:'trf1', GO:'trf1', MA:'trf1',
+    MG:'trf6', MT:'trf1', PA:'trf1', PI:'trf1', RO:'trf1', RR:'trf1',
+    DF:'trf1', TO:'trf1',
+    ES:'trf2', RJ:'trf2',
+    MS:'trf3', SP:'trf3',
+    PR:'trf4', RS:'trf4', SC:'trf4',
+    AL:'trf5', CE:'trf5', PB:'trf5', PE:'trf5', RN:'trf5', SE:'trf5'
+  };
+
+  async function queryDataJud(tribunal, cnpj) {
+    const url = `https://api-publica.datajud.cnj.jus.br/api_publica_${tribunal}/_search`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `APIKey ${DATAJUD_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        size: 10,
+        query: {
+          nested: {
+            path: 'partes',
+            query: {
+              term: { 'partes.cpfCnpj': cnpj }
+            }
+          }
+        },
+        _source: ['numeroProcesso', 'tribunal', 'orgaoJulgador', 'classe', 'dataHoraUltimaAtualizacao']
+      })
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.hits?.hits?.map(h => h._source) || [];
+  }
+
+  async function fetchProcessos(cnpj, uf) {
+    if (!DATAJUD_API_KEY) return null;
+
+    const tribunals = [];
+    if (UF_TO_TRIBUNAL[uf]) tribunals.push(UF_TO_TRIBUNAL[uf]);
+    if (UF_TO_TRF[uf]) tribunals.push(UF_TO_TRF[uf]);
+
+    const results = await Promise.allSettled(
+      tribunals.map(t => queryDataJud(t, cnpj))
+    );
+
+    return results
+      .filter(r => r.status === 'fulfilled')
+      .flatMap(r => r.value);
+  }
+
+  function renderProcessos(processos) {
+    if (processos === null) {
+      return `
+        <div class="datajud-notice">
+          🔑 Para consultar processos judiciais, adicione sua chave gratuita do DataJud
+          no início do arquivo (<code>DATAJUD_API_KEY</code>).<br>
+          Cadastre em <a href="https://datajud-wiki.cnj.jus.br/api-publica/acesso" target="_blank" rel="noopener">datajud.cnj.jus.br</a>.
+        </div>`;
+    }
+    if (!processos.length) {
+      return '<div class="empty-state">Nenhum processo ativo encontrado nos tribunais consultados.</div>';
+    }
+    return processos.map(p => {
+      const num = escapeHTML(p.numeroProcesso || '—');
+      const trib = escapeHTML(p.tribunal || p.orgaoJulgador?.nome || '—');
+      const updated = p.dataHoraUltimaAtualizacao
+        ? escapeHTML(formatDate(p.dataHoraUltimaAtualizacao.slice(0, 10))) : '';
+      return `
+        <div class="processo-row">
+          <div>
+            <div class="processo-num">${num}</div>
+            <div class="processo-meta">${trib}${updated ? ' · Atualizado: ' + updated : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
 </script>
 
 </body>
