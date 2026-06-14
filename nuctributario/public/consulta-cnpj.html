@@ -429,6 +429,46 @@
     spinner.classList.toggle('visible', on);
     if (on) resultCard.classList.remove('visible');
   }
+
+  // ── API cnpj.ws ───────────────────────────────────────────
+
+  async function fetchEmpresa(cnpj) {
+    const res = await fetch(`https://publica.cnpj.ws/cnpj/${cnpj}`);
+    if (res.status === 404) throw new Error('CNPJ não encontrado na Receita Federal.');
+    if (!res.ok) throw new Error(`Erro ao consultar empresa (HTTP ${res.status}).`);
+    return res.json();
+  }
+
+  function getTaxRegime(data) {
+    const s = data.simples;
+    if (s?.optante_mei) return { label: 'MEI', icon: '🟩' };
+    if (s?.optante_simples) return { label: 'Simples Nacional', icon: '🟦' };
+    const rt = data.regime_tributario;
+    if (rt === '5' || rt === 5) return { label: 'Lucro Real', icon: '🟧' };
+    if (rt === '3' || rt === 3) return { label: 'Lucro Presumido', icon: '🟨' };
+    return { label: 'Lucro Presumido', icon: '🟨' };
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function formatPhone(phone) {
+    if (!phone) return '—';
+    const d = phone.replace(/\D/g, '');
+    if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+    if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    return phone;
+  }
+
+  function getSituacaoBadge(situacao) {
+    const s = (situacao || '').toUpperCase();
+    if (s.includes('ATIVA') || s === '02') return { cls: 'badge-ativa', label: '● Ativa' };
+    if (s.includes('BAIXADA') || s === '08') return { cls: 'badge-baixada', label: '● Baixada' };
+    return { cls: 'badge-inapta', label: '● ' + (situacao || 'Inapta') };
+  }
 </script>
 
 </body>
