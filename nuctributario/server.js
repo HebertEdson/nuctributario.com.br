@@ -282,6 +282,11 @@ app.get('/api/sessions/stats', async (req, res) => {
   }
 });
 
+// Rota amigável sem extensão .html
+app.get('/consulta-cnpj', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'consulta-cnpj.html'));
+});
+
 // ─── ADMIN DASHBOARD ───
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 app.get('/admin', (req, res) => {

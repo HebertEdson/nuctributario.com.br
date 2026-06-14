@@ -638,12 +638,7 @@
       return '<div class="empty-state">Localização não identificada — consulta de processos indisponível.</div>';
     }
     if (processos === null) {
-      return `
-        <div class="datajud-notice">
-          🔑 Consulta de processos não configurada. Para ativar, adicione a chave gratuita do DataJud
-          na variável <code>DATAJUD_API_KEY</code> no arquivo <code>.env</code> do servidor.<br>
-          Obtenha sua chave em <a href="https://datajud-wiki.cnj.jus.br/api-publica/acesso" target="_blank" rel="noopener">datajud.cnj.jus.br</a>.
-        </div>`;
+      return '<div class="empty-state">Consulta de processos temporariamente indisponível.</div>';
     }
     if (!processos.length) {
       return '<div class="empty-state">Nenhum processo ativo encontrado nos tribunais consultados.</div>';
