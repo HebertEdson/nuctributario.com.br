@@ -469,6 +469,98 @@
     if (s.includes('BAIXADA') || s === '08') return { cls: 'badge-baixada', label: '● Baixada' };
     return { cls: 'badge-inapta', label: '● ' + (situacao || 'Inapta') };
   }
+
+  // ── RENDER ────────────────────────────────────────────────
+
+  function renderCard(empresa, processos) {
+    const sit = getSituacaoBadge(empresa.descricao_situacao_cadastral || empresa.situacao_cadastral);
+    const regime = getTaxRegime(empresa);
+
+    const enderecoPartes = [
+      escapeHTML(empresa.logradouro),
+      empresa.numero ? `, ${escapeHTML(empresa.numero)}` : '',
+      empresa.complemento ? ` — ${escapeHTML(empresa.complemento)}` : '',
+      empresa.bairro ? ` — ${escapeHTML(empresa.bairro)}` : '',
+      empresa.municipio?.descricao ? ` — ${escapeHTML(empresa.municipio.descricao)}` : '',
+      empresa.uf ? ` / ${escapeHTML(empresa.uf)}` : '',
+      empresa.cep ? ` — ${escapeHTML(empresa.cep)}` : '',
+    ].join('');
+
+    const socios = (empresa.qsa || []).map(s => `
+      <div class="socio-row">
+        <div class="socio-nome">${escapeHTML(s.nome_socio || s.nome || '—')}</div>
+        <div class="socio-qual">${escapeHTML(s.qualificacao_socio?.descricao || s.qualificacao || '')}</div>
+      </div>
+    `).join('') || '<div class="empty-state">Não informado</div>';
+
+    const processosHTML = renderProcessos(processos);
+
+    const ie = (empresa.inscricoes_estaduais || [])
+      .map(i => escapeHTML(i.inscricao_estadual))
+      .filter(Boolean)
+      .join(', ') || '—';
+
+    resultCard.innerHTML = `
+      <div class="card-hero">
+        <span class="badge ${sit.cls}">${escapeHTML(sit.label)}</span>
+        <span class="card-since">Desde ${escapeHTML(formatDate(empresa.data_inicio_atividade))}</span>
+      </div>
+
+      <div class="card-empresa">
+        <div class="razao-social">${escapeHTML(empresa.razao_social || '—')}</div>
+        ${empresa.nome_fantasia ? `<div class="nome-fantasia">Nome Fantasia: ${escapeHTML(empresa.nome_fantasia)}</div>` : ''}
+        <div class="meta-row">
+          <span class="meta-item"><strong>CNPJ:</strong> ${escapeHTML(input.value)}</span>
+          ${ie !== '—' ? `<span class="meta-item"><strong>IE:</strong> ${ie}</span>` : ''}
+          ${empresa.porte?.descricao ? `<span class="meta-item"><strong>Porte:</strong> ${escapeHTML(empresa.porte.descricao)}</span>` : ''}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">📊 Regime Tributário</div>
+        <span class="regime-badge">${regime.icon} ${escapeHTML(regime.label)}</span>
+      </div>
+
+      <div class="section">
+        <div class="section-title">👤 Sócio / Proprietário</div>
+        ${socios}
+      </div>
+
+      <div class="section">
+        <div class="section-title">📞 Informações de Contato</div>
+        ${enderecoPartes ? `<div class="contact-row"><span class="contact-icon">📍</span>${enderecoPartes}</div>` : ''}
+        ${empresa.ddd_telefone_1 ? `<div class="contact-row"><span class="contact-icon">📱</span>${escapeHTML(formatPhone(empresa.ddd_telefone_1))}</div>` : ''}
+        ${empresa.email ? `<div class="contact-row"><span class="contact-icon">✉️</span>${escapeHTML(empresa.email.toLowerCase())}</div>` : ''}
+      </div>
+
+      <div class="section">
+        <div class="section-title">🏛️ Dados Cadastrais</div>
+        <div class="grid2">
+          <div class="field">
+            <label>Natureza Jurídica</label>
+            <span>${escapeHTML(empresa.natureza_juridica?.descricao || '—')}</span>
+          </div>
+          <div class="field">
+            <label>Localização</label>
+            <span>${escapeHTML(empresa.municipio?.descricao || empresa.municipio || '')} ${empresa.uf ? `/ ${escapeHTML(empresa.uf)}` : ''}</span>
+          </div>
+        </div>
+        ${empresa.cnae_fiscal_descricao || empresa.cnae_fiscal
+          ? `<div class="field" style="margin-top:12px">
+               <label>Atividade Principal (CNAE)</label>
+               <span style="font-size:13px">${escapeHTML(empresa.cnae_fiscal || '')} — ${escapeHTML(empresa.cnae_fiscal_descricao || '')}</span>
+             </div>`
+          : ''}
+      </div>
+
+      <div class="section">
+        <div class="section-title">⚖️ Processos Judiciais</div>
+        ${processosHTML}
+      </div>
+    `;
+
+    resultCard.classList.add('visible');
+  }
 </script>
 
 </body>
