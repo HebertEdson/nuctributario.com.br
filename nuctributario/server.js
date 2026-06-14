@@ -181,7 +181,8 @@ app.get('/api/noticias', async (req, res) => {
 });
 
 // ─── PROCESSOS JUDICIAIS (DataJud CNJ proxy) ───
-const DJ_KEY = process.env.DATAJUD_API_KEY || '';
+// Chave pública oficial CNJ — publicada em datajud-wiki.cnj.jus.br/api-publica/acesso
+const DJ_KEY = process.env.DATAJUD_API_KEY || 'cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==';
 
 const UF_TO_TRIBUNAL = {
   AC:'tjac', AL:'tjal', AM:'tjam', AP:'tjap', BA:'tjba', CE:'tjce',
