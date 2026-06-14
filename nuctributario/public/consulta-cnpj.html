@@ -290,6 +290,12 @@
     .spinner { animation: none; border-top-color: var(--nt-blue); }
   }
 
+  @media (max-width: 480px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .search-box button { padding: 0 16px; font-size: 13px; }
+    .toast { white-space: normal; max-width: calc(100vw - 32px); }
+  }
+
   /* ── TOAST ── */
   .toast {
     position: fixed;
@@ -410,7 +416,36 @@
 
     setLoading(true);
     try {
-      const empresa = await fetchEmpresa(raw);
+      const data = await fetchEmpresa(raw);
+      // cnpj.ws aninha dados do estabelecimento em data.estabelecimento
+      const est = data.estabelecimento || {};
+      const empresa = {
+        razao_social: data.razao_social,
+        nome_fantasia: est.nome_fantasia,
+        porte: data.porte,
+        natureza_juridica: data.natureza_juridica,
+        simples: data.simples,
+        socios: data.socios || [],
+        // situação: objeto {id, descricao}
+        situacao_cadastral: est.situacao_cadastral?.descricao || est.situacao_cadastral || '',
+        data_inicio_atividade: est.data_inicio_atividade,
+        // endereço
+        logradouro: [est.tipo_logradouro, est.logradouro].filter(Boolean).join(' '),
+        numero: est.numero,
+        complemento: est.complemento,
+        bairro: est.bairro,
+        municipio: est.cidade?.nome || est.cidade || '',
+        uf: est.estado?.sigla || est.estado || '',
+        cep: est.cep,
+        // contato
+        ddd_telefone_1: est.ddd1 && est.telefone1 ? est.ddd1 + est.telefone1 : '',
+        email: est.email,
+        // atividade principal
+        cnae_fiscal: est.atividade_principal?.id || '',
+        cnae_fiscal_descricao: est.atividade_principal?.descricao || '',
+        // inscrições
+        inscricoes_estaduais: est.inscricoes_estaduais || [],
+      };
       const uf = empresa.uf || '';
       const processosReais = await fetchProcessos(raw, uf);
       renderCard(empresa, processosReais);
@@ -452,8 +487,11 @@
 
   function getTaxRegime(data) {
     const s = data.simples;
-    if (s?.optante_mei) return { label: 'MEI', icon: '🟩' };
-    if (s?.optante_simples) return { label: 'Simples Nacional', icon: '🟦' };
+    // cnpj.ws retorna strings "Sim"/"Não" (ou booleanos em versões antigas)
+    const isMei = s?.optante_mei || s?.mei === 'Sim';
+    const isSimples = s?.optante_simples || s?.simples === 'Sim';
+    if (isMei) return { label: 'MEI', icon: '🟩' };
+    if (isSimples) return { label: 'Simples Nacional', icon: '🟦' };
     const rt = data.regime_tributario;
     if (rt === '5' || rt === 5) return { label: 'Lucro Real', icon: '🟧' };
     if (rt === '3' || rt === 3) return { label: 'Lucro Presumido', icon: '🟨' };
@@ -484,7 +522,8 @@
   // ── RENDER ────────────────────────────────────────────────
 
   function renderCard(empresa, processos) {
-    const sit = getSituacaoBadge(empresa.descricao_situacao_cadastral || empresa.situacao_cadastral);
+    // empresa já é o objeto normalizado (flat) montado em handleSearch
+    const sit = getSituacaoBadge(empresa.situacao_cadastral);
     const regime = getTaxRegime(empresa);
 
     const enderecoPartes = [
@@ -492,14 +531,15 @@
       empresa.numero ? `, ${escapeHTML(empresa.numero)}` : '',
       empresa.complemento ? ` — ${escapeHTML(empresa.complemento)}` : '',
       empresa.bairro ? ` — ${escapeHTML(empresa.bairro)}` : '',
-      empresa.municipio?.descricao ? ` — ${escapeHTML(empresa.municipio.descricao)}` : '',
+      empresa.municipio ? ` — ${escapeHTML(empresa.municipio)}` : '',
       empresa.uf ? ` / ${escapeHTML(empresa.uf)}` : '',
       empresa.cep ? ` — ${escapeHTML(empresa.cep)}` : '',
     ].join('');
 
-    const socios = (empresa.qsa || []).map(s => `
+    // cnpj.ws usa data.socios (não qsa)
+    const socios = (empresa.socios || []).map(s => `
       <div class="socio-row">
-        <div class="socio-nome">${escapeHTML(s.nome_socio || s.nome || '—')}</div>
+        <div class="socio-nome">${escapeHTML(s.nome || s.nome_socio || '—')}</div>
         <div class="socio-qual">${escapeHTML(s.qualificacao_socio?.descricao || s.qualificacao || '')}</div>
       </div>
     `).join('') || '<div class="empty-state">Não informado</div>';
@@ -507,7 +547,7 @@
     const processosHTML = renderProcessos(processos);
 
     const ie = (empresa.inscricoes_estaduais || [])
-      .map(i => escapeHTML(i.inscricao_estadual))
+      .map(i => escapeHTML(i.inscricao_estadual || i.numero || ''))
       .filter(Boolean)
       .join(', ') || '—';
 
@@ -553,13 +593,13 @@
           </div>
           <div class="field">
             <label>Localização</label>
-            <span>${escapeHTML(empresa.municipio?.descricao || empresa.municipio || '')} ${empresa.uf ? `/ ${escapeHTML(empresa.uf)}` : ''}</span>
+            <span>${escapeHTML(empresa.municipio || '')}${empresa.uf ? ` / ${escapeHTML(empresa.uf)}` : ''}</span>
           </div>
         </div>
         ${empresa.cnae_fiscal_descricao || empresa.cnae_fiscal
           ? `<div class="field" style="margin-top:12px">
                <label>Atividade Principal (CNAE)</label>
-               <span style="font-size:13px">${escapeHTML(empresa.cnae_fiscal || '')} — ${escapeHTML(empresa.cnae_fiscal_descricao || '')}</span>
+               <span style="font-size:13px">${escapeHTML(empresa.cnae_fiscal || '')}${empresa.cnae_fiscal && empresa.cnae_fiscal_descricao ? ' — ' : ''}${escapeHTML(empresa.cnae_fiscal_descricao || '')}</span>
              </div>`
           : ''}
       </div>
