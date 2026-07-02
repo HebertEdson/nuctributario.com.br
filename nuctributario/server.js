@@ -28,15 +28,20 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-// Servir assets e arquivos públicos
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
-
-// ─── FISCALPRO (RecuperaPro SPA) — deve vir ANTES do static geral ───
-app.use('/fiscalpro', express.static(path.join(__dirname, 'public', 'fiscalpro')));
-app.get(['/fiscalpro', '/fiscalpro/*'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'fiscalpro', 'index.html'));
+// ─── FISCALPRO SUBDOMÍNIO (fiscalpro.nuctributario.com.br) ───
+const fiscalproStatic = express.static(path.join(__dirname, 'public', 'fiscalpro'));
+app.use((req, res, next) => {
+  if (req.hostname === 'fiscalpro.nuctributario.com.br') {
+    fiscalproStatic(req, res, () => {
+      res.sendFile(path.join(__dirname, 'public', 'fiscalpro', 'index.html'));
+    });
+    return;
+  }
+  next();
 });
 
+// Servir assets e arquivos públicos
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // URL do Formspree para emails
