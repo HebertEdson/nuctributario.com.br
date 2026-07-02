@@ -30,6 +30,13 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Servir assets e arquivos públicos
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// ─── FISCALPRO (RecuperaPro SPA) — deve vir ANTES do static geral ───
+app.use('/fiscalpro', express.static(path.join(__dirname, 'public', 'fiscalpro')));
+app.get(['/fiscalpro', '/fiscalpro/*'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'fiscalpro', 'index.html'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // URL do Formspree para emails
@@ -286,12 +293,6 @@ app.get('/api/sessions/stats', async (req, res) => {
 // Rota amigável sem extensão .html
 app.get('/consulta-cnpj', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'consulta-cnpj.html'));
-});
-
-// ─── FISCALPRO (RecuperaPro SPA) ───
-app.use('/fiscalpro', express.static(path.join(__dirname, 'public', 'fiscalpro')));
-app.get(['/fiscalpro', '/fiscalpro/*'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'fiscalpro', 'index.html'));
 });
 
 // ─── ADMIN DASHBOARD ───
