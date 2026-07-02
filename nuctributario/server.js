@@ -290,7 +290,7 @@ app.get('/consulta-cnpj', (req, res) => {
 
 // ─── FISCALPRO (RecuperaPro SPA) ───
 app.use('/fiscalpro', express.static(path.join(__dirname, 'public', 'fiscalpro')));
-app.get('/fiscalpro/*', (req, res) => {
+app.get(['/fiscalpro', '/fiscalpro/*'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'fiscalpro', 'index.html'));
 });
 
