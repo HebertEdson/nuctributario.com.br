@@ -288,6 +288,12 @@ app.get('/consulta-cnpj', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'consulta-cnpj.html'));
 });
 
+// ─── FISCALPRO (RecuperaPro SPA) ───
+app.use('/fiscalpro', express.static(path.join(__dirname, 'public', 'fiscalpro')));
+app.get('/fiscalpro/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'fiscalpro', 'index.html'));
+});
+
 // ─── ADMIN DASHBOARD ───
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 app.get('/admin', (req, res) => {
